@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t hakonschutt/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run hakonschutt/react-test npm test -- --coverage
+
+after_success:
+   - docker build -t hakonschutt/multi-client ./client
+   - docker build -t hakonschutt/multi-nginx ./nginx
+   - docker build -t hakonschutt/multi-server ./server
+   - docker build -t hakonschutt/multi-worker ./worker
+   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+   - docker push hakonschutt/multi-client
+   - docker push hakonschutt/multi-nginx
+   - docker push hakonschutt/multi-server
+   - docker push hakonschutt/multi-worker
